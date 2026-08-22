@@ -95,11 +95,11 @@ jobs:
       id: buildtree
       with:
         cond: ${{ inputs.MANIFEST_BRANCH == '11' || inputs.MANIFEST_BRANCH == '12.1' }}
-        if_true: omni
-        if_false: omni
+        if_true: aosp
+        if_false: aosp
 
     - name: Install OpenJDK
-      if: steps.buildtree.outputs.value == 'omni'
+      if: steps.buildtree.outputs.value == 'aosp'
       uses: actions/setup-java@v4
       with:
         distribution: zulu
@@ -161,8 +161,8 @@ jobs:
         repo sync -j$(nproc --all)
       working-directory: workspace
 
-    - name: Clone device tree (Omni)
-      if: ${{ steps.buildtree.outputs.value == 'omni' }}
+    - name: Clone device tree (aosp)
+      if: ${{ steps.buildtree.outputs.value == 'aosp' }}
       run: |
         git clone ${{ inputs.DEVICE_TREE_URL }} -b ${{ inputs.DEVICE_TREE_BRANCH }} ./${{ inputs.DEVICE_PATH }}
       working-directory: workspace
@@ -176,9 +176,9 @@ jobs:
       id: syncdevicedeps
       continue-on-error: true
 
-    - name: Sync Device Dependencies (Omni/subdevices)
+    - name: Sync Device Dependencies (aosp/subdevices)
       if: |
-        steps.buildtree.outputs.value == 'omni'
+        steps.buildtree.outputs.value == 'aosp'
         || steps.syncdevicedeps.outcome == 'failure'
       run: |
         bash ${GITHUB_WORKSPACE}/scripts/convert.sh ${{ inputs.DEVICE_PATH }}/${{ steps.buildtree.outputs.value }}.dependencies
@@ -221,7 +221,7 @@ jobs:
       continue-on-error: true
 
     - name: Install Python 2
-      if: ${{ steps.buildtree.outputs.value == 'omni' }}
+      if: ${{ steps.buildtree.outputs.value == 'aosp' }}
       run: |
         sudo apt -y install python2
         cd /usr/bin
@@ -239,8 +239,8 @@ jobs:
         lunch twrp_${{ inputs.DEVICE_NAME }}-eng && make $(tr -d _ <<< ${{ inputs.BUILD_TARGET }})image -j$(nproc --all)
       working-directory: workspace
 
-    - name: Building recovery (Omni)
-      if: ${{ steps.buildtree.outputs.value == 'omni' }} 
+    - name: Building recovery (aosp)
+      if: ${{ steps.buildtree.outputs.value == 'aosp' }} 
       run: |
         source build/envsetup.sh
         export ALLOW_MISSING_DEPENDENCIES=true
